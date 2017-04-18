@@ -56,7 +56,7 @@ class XMLMessage(object):
 
     def init_set_attribute_params(self):
         self.xml_root.set('CommandName', 'SetAttributeValue')
-        self.parameters = [{'Name': 'Port', 'Value': '192.168.42.240/1/1'},
+        self.parameters = [{'Name': 'Port', 'Value': '192.168.42.240/1/2'},
                            {'Name': 'Attribute', 'Value': 'LIN'},
                            {'Name': 'Value', 'Value': 'ON'}]
 
@@ -108,7 +108,7 @@ while True:
         print "Sending message...."
         sock.send(message)
         print "Waiting for response...."
-        data = sock.recv()
+        data = sock.recv(1024)
         print data
 
 print "Thank you, disconnecting...."
