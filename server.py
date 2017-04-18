@@ -7,7 +7,6 @@ import time
 from platform import system as system_name  # Returns the system/OS name
 from os import system as system_call        # Execute a shell command
 import hashlib
-import json
 
 
 class ServerRequest(object):
@@ -16,14 +15,26 @@ class ServerRequest(object):
         self.xml = ET.fromstring(xml_string)
         self.command = self.xml.get('CommandName')
         self.command_args = {}
-        self.response = {"Success": 0}
+        self.response = {"Success": "0", "Log": ""}
+        self.xml_root = ET.Element('CommandResponse')
+        self.xml_root.set("CommandName", self.command)
 
     def execute(self):
         self.parse_args()
         function_name = getattr(self, "execute_" + self.command.lower())
         function_name()
 
-        return self.response
+        self.xml_root.set("Success", self.response["Success"])
+        ET.SubElement(self.xml_root, "ErrorCode")
+        ET.SubElement(self.xml_root, "Log").text = self.response["Log"]
+        if "ResponseInfo" in self.response.keys():
+            ET.SubElement(self.xml_root, "ResponseInfo").text = self.response["ResponseInfo"]
+        if "ResourceInfo" in self.response.keys():
+            ET.SubElement(self.xml_root, "ResourceInfo").text = self.response["ResourceInfo"]
+        if "Value" in self.response.keys():
+            ET.SubElement(self.xml_root, "Value").text = self.response["Value"]
+
+        return ET.tostring(self.xml_root, 'utf-8')
 
     def parse_args(self):
         parameters = self.xml.find('Parameters')
@@ -44,7 +55,7 @@ class ServerRequest(object):
         global authenticatedState, lastAuthTime
 
         if self.check_auth():
-            self.response["Success"] = 1
+            self.response["Success"] = '1'
             return
 
         ping_response = self.ping_host(self.command_args.get("Address"))
@@ -55,12 +66,12 @@ class ServerRequest(object):
             authenticatedState = True
             lastAuthTime = self.requestTime
 
-        self.response["Success"] = int(ping_response)
+        self.response["Success"] = str(int(ping_response))
 
     def execute_logout(self):
         global authenticatedState
 
-        self.response["Success"] = int(self.check_auth())
+        self.response["Success"] = str(int(self.check_auth()))
         authenticatedState = False
 
     @staticmethod
@@ -117,14 +128,14 @@ class ServerRequest(object):
                 bidir_port_pairs_hashes.append(port_b_md5_hash + port_a_md5_hash)
 
         if not port_pair_is_new:
-            self.response["Success"] = 1
+            self.response["Success"] = '1'
             self.response["ResponseInfo"] = "CONNECTION EXISTS"
         else:
             if not port_a_is_new or not port_b_is_new:
-                self.response["Success"] = 1
+                self.response["Success"] = '1'
                 self.response["ResponseInfo"] = "CONNECTION USED"
             else:
-                self.response["Success"] = 1
+                self.response["Success"] = '1'
                 self.response["ResponseInfo"] = "CONNECTION CREATED"
 
     def execute_unidir(self):
@@ -161,21 +172,21 @@ class ServerRequest(object):
 
         if not port_pair_is_new:
             self.response["ResponseInfo"] = "CONNECTION EXISTS"
-            self.response["Success"] = 1
+            self.response["Success"] = '1'
             return
         else:
             if port_pair_is_opposite:
                 self.response["ResponseInfo"] = "CONNECTION CREATED"
-                self.response["Success"] = 1
+                self.response["Success"] = '1'
                 return
             else:
                 if not port_src_is_new:
                     self.response["ResponseInfo"] = "SrcPORT is USED - Creating additional connection"
-                    self.response["Success"] = 1
+                    self.response["Success"] = '1'
                     return
                 if not port_dst_is_new:
                     self.response["ResponseInfo"] = "DstPORT is USED - Not creating an additional connection"
-                    self.response["Success"] = 1
+                    self.response["Success"] = '1'
                     return
 
         self.response["Log"] = "Both ports are new, response is not specified =/"
@@ -189,7 +200,7 @@ class ServerRequest(object):
 
         address = self.command_args.get("Address")
         self.add_address_to_discovery_list(address, hashlib.md5(address).hexdigest())
-        self.response["Success"] = 1
+        self.response["Success"] = '1'
 
     def execute_setattributevalue(self):
         global port_attributes
@@ -207,7 +218,7 @@ class ServerRequest(object):
             port_attributes[port_hash] = {}
         port_attributes[port_hash][attribute_name] = attribute_value
 
-        self.response["Success"] = 1
+        self.response["Success"] = '1'
 
     def execute_getattributevalue(self):
         global port_attributes
@@ -227,7 +238,7 @@ class ServerRequest(object):
             self.response["Log"] = "No attribute found"
             return
 
-        self.response["Success"] = 1
+        self.response["Success"] = '1'
         self.response["Value"] = port_attributes[port_hash][attribute_name]
 
 
@@ -241,28 +252,17 @@ unidir_dst_port_hashes = []
 unidir_port_pairs_hashes = []
 port_attributes = {}
 
-# data = '<Command CommandName="Bidir"><Parameters><Parameter Name="Port_A" Value="192.168.42.240/1/1"/><Parameter Name="Port_B" Value="192.168.42.240/1/2"/></Parameters></Command>'
-#
-# ServerRequest(data).execute()
-# exit(0)
-# time.sleep(10)
-# ServerRequest(data).execute()
-
-# exit(0)
-
 sock = socket.socket()
 sock.bind(('', 9010))
 sock.listen(1)
-conn, addr = sock.accept()
-
-print 'connected:', addr
+connection, address = sock.accept()
 
 while True:
-    data = conn.recv(1024)
+    data = connection.recv(1024)
     if not data:
         break
 
-    response = ServerRequest(data).execute()
-    conn.sendall(json.dumps(response))
+    responseXML = ServerRequest(data).execute()
+    connection.sendall(responseXML)
 
-conn.close()
+connection.close()
