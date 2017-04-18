@@ -1,0 +1,84 @@
+<Commands>
+    <Command CommandName="Login">
+        <Parameters>
+           <Parameter Name = "Address"  Value="192.168.42.240"/>
+           <Parameter Name = "User"     Value="admin"/>
+           <Parameter Name = "Password" Value="password"/>
+        </Parameters>
+    </Command>
+	<CommandResponse CommandName="Login" Success="0/1">
+		<ErrorCode></ErrorCode>
+        <Log></Log>
+        <ResponseInfo></ResponseInfo>
+	</CommandResponse>
+	
+    <Command CommandName="Logout">
+        <Parameters/>
+    </Command>
+    <CommandResponse CommandName="Logout" Success="0/1">
+		<ErrorCode></ErrorCode>
+        <Log></Log>
+        <ResponseInfo></ResponseInfo>
+	</CommandResponse>
+    
+	<Command CommandName = "Discovery">
+        <Parameters>
+			<Parameter Name="Address" Value="192.168.42.240/1/1"/>
+		</Parameters>
+    </Command>
+	<CommandResponse CommandName="Discovesry" Success="0/1">
+		<ErrorCode></ErrorCode>
+        <Log></Log>
+        <ResourceInfo></ResourceInfo>
+	</CommandResponse>
+        
+	<Command CommandName="Bidir">
+		<Parameters>
+			<Parameter Name="Port_A" Value="192.168.42.240/1/1"/>
+			<Parameter Name="Port_B" Value="192.168.42.240/1/2"/>
+		</Parameters>
+	</Command>
+	<CommandResponse CommandName="Bidir" Success="0/1">
+ 		<ErrorCode></ErrorCode>
+        <Log></Log>
+        <ResponseInfo></ResponseInfo>
+    </CommandResponse>
+
+	<Command CommandName="Unidir">
+		<Parameters>
+			<Parameter Name="SrcPort" Value="192.168.42.240/2/1"/>
+			<Parameter Name="DstPort" Value="192.168.42.240/2/2"/>
+		</Parameters>
+	</Command>
+	<CommandResponse CommandName="Unidir" Success="0/1">
+		<ErrorCode></ErrorCode>
+        <Log></Log>
+        <ResponseInfo></ResponseInfo>
+    </CommandResponse>
+	
+    <Command CommandName="GetAttributeValue">
+        <Parameters>
+            <Parameter Name = "Port"   Value="192.168.42.240/1/2"/>
+            <Parameter Name = "Attribute" Value="LIN"/>
+        </Parameters>
+    </Command>
+	<CommandResponse CommandName="GetAttributeValue" Success="0/1">
+		<ErrorCode></ErrorCode>
+        <Log></Log>
+        <Value>value</Value>
+	</CommandResponse>
+
+    <Command CommandName = "SetAttributeValue">
+        <Parameters>
+            <Parameter Name = "Port"   Value="192.168.42.240/1/2"/>
+            <Parameter Name = "Attribute" Value="LIN"/>
+            <Parameter Name = "Value"     Value="On"/>
+        </Parameters>
+    </Command>
+	<CommandResponse CommandName="SetAttributeValue" Success="0/1">
+		<ErrorCode></ErrorCode>
+        <Log></Log>
+        <ResponseInfo></ResponseInfo>
+    </CommandResponse>
+	
+</Commands>
